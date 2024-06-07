@@ -38,6 +38,7 @@ def extract_features(data, fs):
         feature_vector = [mean, std, skewness, kurtosis, delta_power, theta_power, alpha_power, beta_power, gamma_power]
         feature_vector.extend(wavelet_features)
         features.append(feature_vector)
+        
     
     return np.array(features)
 
@@ -135,7 +136,7 @@ y_train_tensor = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
 X_test_tensor = torch.tensor(X_test_features, dtype=torch.float32)
 y_test_tensor = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1)
 
-train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+train_dataset = TensorDataset(X_train_tensor, y_train_tensor) # type: ignore
 test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
