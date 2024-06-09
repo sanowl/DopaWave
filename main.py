@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.ensemble import GradientBoostingRegressor
 
 def load_dataset():
-    X = np.random.randn(100, 1000)
-    y = np.random.randn(100)
+    X = np.random.randn(100, 1000).astype(np.float32)
+    y = np.random.randn(100).astype(np.float32)
     return X, y
 
 def extract_features(X):
@@ -21,18 +21,22 @@ def extract_features(X):
         std = np.std(row)
         skewness = np.mean((row - mean)**3) / (std**3)
         kurtosis = np.mean((row - mean)**4) / (std**4)
+        
         freqs, psd = welch(row)
         delta_power = np.sum(psd[(freqs >= 0.5) & (freqs < 4)])
         theta_power = np.sum(psd[(freqs >= 4) & (freqs < 8)])
         alpha_power = np.sum(psd[(freqs >= 8) & (freqs < 13)])
         beta_power = np.sum(psd[(freqs >= 13) & (freqs < 30)])
         gamma_power = np.sum(psd[(freqs >= 30)])
+        
         coeffs = pywt.wavedec(row, 'db4', level=5)
         wavelet_features = np.hstack([np.mean(c) for c in coeffs] + [np.std(c) for c in coeffs])
+        
         feature_vector = [mean, std, skewness, kurtosis, delta_power, theta_power, alpha_power, beta_power, gamma_power]
         feature_vector.extend(wavelet_features)
         features.append(feature_vector)
-    features = np.array(features)
+    
+    features = np.array(features).astype(np.float32)
     scaler = StandardScaler()
     return scaler.fit_transform(features)
 
@@ -132,8 +136,8 @@ X_test_tensor = torch.tensor(X_test_features, dtype=torch.float32)
 y_test_tensor = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1)
 train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
 test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)  # Reduced batch size
+test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)   # Reduced batch size
 
 cnn_lstm_model = CNNLSTMModel(input_shape=(X_train_tensor.shape[1], 1))
 criterion = nn.MSELoss()
